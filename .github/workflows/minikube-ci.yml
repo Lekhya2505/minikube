@@ -24,21 +24,21 @@ jobs:
           curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
           sudo install minikube-linux-amd64 /usr/local/bin/minikube
 
-      - name: Start Minikube
+      - name: Start Minikube (as non-root user)
         run: |
-          sudo minikube start --driver=docker
-          minikube status
+          # Create a new user for non-root Minikube
+          sudo useradd -m minikubeuser
+          sudo su - minikubeuser -c "minikube start --driver=docker"
+          sudo su - minikubeuser -c "minikube status"
 
       - name: Deploy NGINX
         run: |
-          kubectl create deployment nginx --image=nginx
-          kubectl expose deployment nginx --port=80 --type=NodePort
-          kubectl get svc
+          sudo su - minikubeuser -c "kubectl create deployment nginx --image=nginx"
+          sudo su - minikubeuser -c "kubectl expose deployment nginx --port=80 --type=NodePort"
+          sudo su - minikubeuser -c "kubectl get svc"
 
       - name: Test Service
         run: |
-          URL=$(minikube service nginx --url)
+          URL=$(sudo su - minikubeuser -c "minikube service nginx --url")
           echo "Testing $URL"
           curl -s $URL
-
-
