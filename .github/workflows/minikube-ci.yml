@@ -40,10 +40,17 @@ jobs:
         run: |
           sudo su - minikubeuser -c "newgrp docker; kubectl create deployment nginx --image=nginx"
           sudo su - minikubeuser -c "newgrp docker; kubectl expose deployment nginx --port=80 --type=NodePort"
-          sudo su - minikubeuser -c "newgrp docker; kubectl get svc"
+          
+          # Ensure the NGINX pod is running
+          sudo su - minikubeuser -c "newgrp docker; kubectl rollout status deployment/nginx"
+          sudo su - minikubeuser -c "newgrp docker; kubectl get pods"
 
       - name: Test Service
         run: |
+          # Wait for the service to be available
+          sleep 10  # Adjust the sleep time if necessary
+
+          # Fetch the service URL and test it
           URL=$(sudo su - minikubeuser -c "newgrp docker; minikube service nginx --url")
           echo "Testing $URL"
           curl -s $URL
