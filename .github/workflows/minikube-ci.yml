@@ -1,0 +1,38 @@
+name: Minikube CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start Minikube
+        uses: medyagh/setup-minikube@v0.4.0
+        with:
+          driver: docker  # or none/virtualbox if you're using a custom runner
+
+      - name: Verify Minikube status
+        run: |
+          minikube status
+          kubectl version --client
+          kubectl get nodes
+
+      - name: Deploy to Minikube
+        run: |
+          kubectl create deployment nginx --image=nginx
+          kubectl expose deployment nginx --port=80 --type=NodePort
+          kubectl get svc
+
+      - name: Run tests (example)
+        run: |
+          curl $(minikube service nginx --url)
